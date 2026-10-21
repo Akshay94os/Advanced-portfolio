@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" id="html-root">
+{% load static %}
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Akshay Borase | Full-Stack Developer{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}Personal portfolio of Akshay Subhash Borase – Full-Stack Developer, MCA Scholar, Python & Django expert.{% endblock %}"/>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT:'#7C3AED', 50:'#F5F3FF', 100:'#EDE9FE', 200:'#DDD6FE', 500:'#8B5CF6', 600:'#7C3AED', 700:'#6D28D9', 900:'#4C1D95' },
+            accent:  { DEFAULT:'#06B6D4', 500:'#06B6D4', 600:'#0891B2' },
+            dark:    { DEFAULT:'#0F0F1A', card:'#1A1A2E', border:'#2D2D4A' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          animation: {
+            'float':     'float 6s ease-in-out infinite',
+            'pulse-glow':'pulse-glow 2s ease-in-out infinite',
+            'slide-up':  'slideUp 0.6s ease-out',
+            'fade-in':   'fadeIn 0.5s ease-out',
+          },
+          keyframes: {
+            float:      { '0%,100%':{ transform:'translateY(0px)' }, '50%':{ transform:'translateY(-20px)' } },
+            'pulse-glow':{ '0%,100%':{ boxShadow:'0 0 20px rgba(124,58,237,0.3)' }, '50%':{ boxShadow:'0 0 40px rgba(124,58,237,0.7)' } },
+            slideUp:    { '0%':{ opacity:'0', transform:'translateY(30px)' }, '100%':{ opacity:'1', transform:'translateY(0)' } },
+            fadeIn:     { '0%':{ opacity:'0' }, '100%':{ opacity:'1' } },
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+
+  <style>
+    :root { --primary:#7C3AED; --accent:#06B6D4; }
+    body  { font-family:'Inter',sans-serif; }
+    /* Scrollbar */
+    ::-webkit-scrollbar{ width:6px } ::-webkit-scrollbar-track{ background:#0F0F1A }
+    ::-webkit-scrollbar-thumb{ background:var(--primary); border-radius:3px }
+    /* Form inputs */
+    .form-input{ width:100%; padding:.6rem .9rem; border-radius:.5rem; border:1px solid #3D3D5C;
+      background:#12122A; color:#E2E8F0; font-size:.9rem; outline:none; transition:border .2s; }
+    .form-input:focus{ border-color:var(--primary); box-shadow:0 0 0 3px rgba(124,58,237,.2); }
+    .form-checkbox{ accent-color:var(--primary); width:1rem; height:1rem; }
+    /* Modal backdrop */
+    .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1000;
+      backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+    .modal-overlay.active{ display:flex; }
+    .modal-box{ background:#1A1A2E; border:1px solid #3D3D5C; border-radius:1rem; padding:2rem;
+      width:min(95vw,640px); max-height:90vh; overflow-y:auto; position:relative; }
+    .modal-box::-webkit-scrollbar{ width:4px }
+    /* Gradient text */
+    .grad-text{ background:linear-gradient(135deg,#7C3AED,#06B6D4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    /* Glass card */
+    .glass{ background:rgba(26,26,46,.6); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.05); }
+    /* Glow border */
+    .glow-border{ border:1px solid rgba(124,58,237,.4); box-shadow:0 0 20px rgba(124,58,237,.15); }
+    /* Skill badge */
+    .skill-badge{ display:inline-flex; align-items:center; gap:.4rem; padding:.45rem 1rem;
+      border-radius:2rem; background:rgba(124,58,237,.15); border:1px solid rgba(124,58,237,.3);
+      font-size:.82rem; font-weight:500; color:#C4B5FD; transition:all .25s; cursor:default; }
+    .skill-badge:hover{ background:rgba(124,58,237,.3); transform:translateY(-2px); }
+    /* Toast */
+    #toast{ position:fixed; bottom:2rem; right:2rem; z-index:9999; padding:.85rem 1.5rem;
+      border-radius:.75rem; font-weight:500; font-size:.9rem; max-width:340px;
+      transition:all .35s; opacity:0; transform:translateY(20px); pointer-events:none; }
+    #toast.show{ opacity:1; transform:translateY(0); }
+    #toast.success{ background:#065f46; color:#6ee7b7; border:1px solid #10b981; }
+    #toast.error  { background:#7f1d1d; color:#fca5a5; border:1px solid #ef4444; }
+    /* Nav link */
+    .nav-link{ position:relative; padding:.25rem .1rem; color:#94A3B8; transition:color .2s; font-weight:500; }
+    .nav-link::after{ content:''; position:absolute; bottom:-2px; left:0; width:0; height:2px;
+      background:linear-gradient(90deg,var(--primary),var(--accent)); transition:width .3s; border-radius:1px; }
+    .nav-link:hover,.nav-link.active{ color:#E2E8F0; }
+    .nav-link:hover::after,.nav-link.active::after{ width:100%; }
+    /* Admin badge pulse */
+    @keyframes badge-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(124,58,237,.5) } 50%{ box-shadow:0 0 0 6px rgba(124,58,237,0) } }
+    .admin-active{ animation:badge-pulse 2s infinite; }
+  </style>
+</head>
+
+<body class="bg-[#0F0F1A] text-slate-200 min-h-screen">
+
+<!-- ═══════════════ NAVBAR ═══════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="{% url 'home' %}" class="flex items-center gap-2 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-600 to-accent-500 flex items-center justify-center text-white font-black text-base shadow-lg group-hover:scale-110 transition-transform">A</div>
+        <span class="font-bold text-white hidden sm:block">Akshay<span class="grad-text">Borase</span></span>
+      </a>
+
+      <!-- Desktop Nav -->
+      <div class="hidden md:flex items-center gap-6">
+        <a href="{% url 'home' %}"      class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+        <a href="{% url 'projects' %}"  class="nav-link {% if 'project' in request.resolver_match.url_name %}active{% endif %}">Projects</a>
+        <a href="{% url 'profiles' %}"  class="nav-link {% if request.resolver_match.url_name == 'profiles' %}active{% endif %}">Profiles</a>
+        <a href="{% url 'notes' %}"     class="nav-link {% if request.resolver_match.url_name == 'notes' %}active{% endif %}">Notes</a>
+        <a href="{% url 'documents' %}" class="nav-link {% if request.resolver_match.url_name == 'documents' %}active{% endif %}">Documents</a>
+      </div>
+
+      <!-- Right Controls -->
+      <div class="flex items-center gap-3">
+        <!-- Dark/Light toggle -->
+        <button id="theme-toggle" title="Toggle theme"
+          class="w-9 h-9 rounded-xl bg-dark-card border border-dark-border flex items-center justify-center hover:border-primary-500 transition-all">
+          <i class="fas fa-moon text-slate-400 text-sm" id="theme-icon"></i>
+        </button>
+
+        <!-- Admin Login/Logout -->
+        {% if is_admin_logged_in %}
+        <button id="admin-logout-btn" title="Admin Logout"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary-600/20 border border-primary-500/40 text-primary-300 text-sm font-medium hover:bg-primary-600/30 transition-all admin-active">
+          <i class="fas fa-shield-alt text-xs"></i><span class="hidden sm:inline">Admin</span>
+          <i class="fas fa-sign-out-alt text-xs ml-1"></i>
+        </button>
+        {% else %}
+        <button id="admin-login-btn" title="Admin Login"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-dark-card border border-dark-border text-slate-400 text-sm font-medium hover:border-primary-500 hover:text-primary-300 transition-all">
+          <i class="fas fa-lock text-xs"></i><span class="hidden sm:inline">Admin</span>
+        </button>
+        {% endif %}
+
+        <!-- Mobile menu -->
+        <button id="mobile-menu-btn" class="md:hidden w-9 h-9 rounded-xl bg-dark-card border border-dark-border flex items-center justify-center">
+          <i class="fas fa-bars text-slate-400 text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="hidden md:hidden bg-dark-card border-t border-dark-border px-4 pb-4">
+    <div class="flex flex-col gap-3 pt-3">
+      <a href="{% url 'home' %}"      class="nav-link">Home</a>
+      <a href="{% url 'projects' %}"  class="nav-link">Projects</a>
+      <a href="{% url 'profiles' %}"  class="nav-link">Profiles</a>
+      <a href="{% url 'notes' %}"     class="nav-link">Notes</a>
+      <a href="{% url 'documents' %}" class="nav-link">Documents</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+<main class="pt-16">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="border-t border-dark-border mt-20" id="site-footer">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid md:grid-cols-3 gap-8 mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-600 to-accent-500 flex items-center justify-center text-white font-black text-sm">A</div>
+          <span class="font-bold text-white">Akshay <span class="grad-text">Borase</span></span>
+        </div>
+        <p class="text-slate-400 text-sm" id="footer-tagline">{{ global_footer.tagline|default:"Crafting scalable solutions, one line at a time." }}</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-white mb-3">Quick Links</h3>
+        <div class="flex flex-col gap-2 text-sm">
+          <a href="{% url 'home' %}"      class="text-slate-400 hover:text-primary-400 transition-colors">Home</a>
+          <a href="{% url 'projects' %}"  class="text-slate-400 hover:text-primary-400 transition-colors">Projects</a>
+          <a href="{% url 'profiles' %}"  class="text-slate-400 hover:text-primary-400 transition-colors">Profiles</a>
+          <a href="{% url 'notes' %}"     class="text-slate-400 hover:text-primary-400 transition-colors">Notes</a>
+          <a href="{% url 'documents' %}" class="text-slate-400 hover:text-primary-400 transition-colors">Documents</a>
+        </div>
+      </div>
+      <div>
+        <h3 class="font-semibold text-white mb-3">Contact</h3>
+        <div class="flex flex-col gap-2 text-sm text-slate-400">
+          <a href="mailto:{{ global_footer.contact_email|default:'akshayborase94@gmail.com' }}" id="footer-email"
+             class="flex items-center gap-2 hover:text-primary-400 transition-colors">
+            <i class="fas fa-envelope text-primary-500"></i>
+            {{ global_footer.contact_email|default:"akshayborase94@gmail.com" }}
+          </a>
+          {% if global_footer.address %}
+          <span class="flex items-center gap-2">
+            <i class="fas fa-map-marker-alt text-primary-500"></i>
+            <span id="footer-address">{{ global_footer.address }}</span>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-dark-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-slate-500 text-sm" id="footer-copyright">{{ global_footer.copyright_text|default:"© 2024 Akshay Subhash Borase. All rights reserved." }}</p>
+      <div class="flex items-center gap-3">
+        {% if is_admin_logged_in %}
+        <button onclick="openModal('footer-modal')"
+          class="text-xs text-slate-500 hover:text-primary-400 transition-colors flex items-center gap-1">
+          <i class="fas fa-edit"></i> Edit Footer
+        </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════ TOAST ═══════════════ -->
+<div id="toast"></div>
+
+<!-- ═══════════════ ADMIN LOGIN MODAL ═══════════════ -->
+<div id="admin-login-modal" class="modal-overlay">
+  <div class="modal-box max-w-sm">
+    <button onclick="closeModal('admin-login-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <div class="text-center mb-6">
+      <div class="w-14 h-14 rounded-2xl bg-primary-600/20 border border-primary-500/30 flex items-center justify-center mx-auto mb-3">
+        <i class="fas fa-shield-alt text-primary-400 text-xl"></i>
+      </div>
+      <h2 class="text-xl font-bold text-white">Admin Access</h2>
+      <p class="text-slate-400 text-sm mt-1">Enter your admin password to enable editing</p>
+    </div>
+    <form id="admin-login-form" onsubmit="submitAdminLogin(event)">
+      {% csrf_token %}
+      <input type="password" id="admin-password-input" class="form-input mb-4" placeholder="Admin Password" required/>
+      <button type="submit" class="w-full btn-primary py-2.5 rounded-xl font-semibold">
+        <span id="admin-login-btn-text">Unlock Editing</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ FOOTER EDIT MODAL ═══════════════ -->
+<div id="footer-modal" class="modal-overlay">
+  <div class="modal-box">
+    <button onclick="closeModal('footer-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <h2 class="text-xl font-bold text-white mb-6"><i class="fas fa-edit text-primary-400 mr-2"></i>Edit Footer</h2>
+    <form id="footer-form" onsubmit="submitFooter(event)" class="space-y-4">
+      {% csrf_token %}
+      {{ footer_form.as_p }}
+      <button type="submit" class="w-full btn-primary py-2.5 rounded-xl font-semibold">Save Footer</button>
+    </form>
+  </div>
+</div>
+
+{% block extra_modals %}{% endblock %}
+
+<!-- ═══════════════ GLOBAL JS ═══════════════ -->
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+// GSAP setup
+gsap.registerPlugin(ScrollTrigger);
+
+// ── Navbar scroll effect ──
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  if (window.scrollY > 30) {
+    nav.classList.add('bg-[#0F0F1A]/90', 'backdrop-blur-xl', 'border-b', 'border-dark-border', 'shadow-2xl');
+  } else {
+    nav.classList.remove('bg-[#0F0F1A]/90', 'backdrop-blur-xl', 'border-b', 'border-dark-border', 'shadow-2xl');
+  }
+});
+
+// ── Mobile menu ──
+document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+  const menu = document.getElementById('mobile-menu');
+  menu.classList.toggle('hidden');
+});
+
+// ── Theme toggle ──
+const htmlRoot   = document.getElementById('html-root');
+const themeIcon  = document.getElementById('theme-icon');
+let isDark = localStorage.getItem('theme') !== 'light';
+
+function applyTheme(dark) {
+  isDark = dark;
+  if (dark) {
+    htmlRoot.classList.add('dark');
+    themeIcon.className = 'fas fa-moon text-slate-400 text-sm';
+  } else {
+    htmlRoot.classList.remove('dark');
+    themeIcon.className = 'fas fa-sun text-yellow-400 text-sm';
+  }
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+}
+applyTheme(isDark);
+document.getElementById('theme-toggle').addEventListener('click', () => applyTheme(!isDark));
+
+// ── Modal helpers ──
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); gsap.fromTo(el.querySelector('.modal-box'), {scale:.9, opacity:0}, {scale:1, opacity:1, duration:.3, ease:'back.out(1.4)'}); }
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.remove('active'); }
+}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+});
+// Esc key
+document.addEventListener('keydown', e => { if (e.key==='Escape') document.querySelectorAll('.modal-overlay.active').forEach(m=>m.classList.remove('active')); });
+
+// ── Toast ──
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  setTimeout(() => { t.className = ''; }, 3500);
+}
+
+// ── CSRF helper ──
+function getCsrf() {
+  return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+}
+
+// ── Admin login/logout ──
+const adminLoginBtn  = document.getElementById('admin-login-btn');
+const adminLogoutBtn = document.getElementById('admin-logout-btn');
+if (adminLoginBtn)  adminLoginBtn.addEventListener('click',  () => openModal('admin-login-modal'));
+if (adminLogoutBtn) adminLogoutBtn.addEventListener('click',  () => {
+  if (confirm('Log out from admin edit mode?')) {
+    fetch('/auth/admin-logout/', {method:'POST', headers:{'X-CSRFToken':getCsrf()}})
+      .then(()=>location.reload());
+  }
+});
+
+async function submitAdminLogin(e) {
+  e.preventDefault();
+  const btn  = document.getElementById('admin-login-btn-text');
+  const pass = document.getElementById('admin-password-input').value;
+  btn.textContent = 'Verifying…';
+  const fd = new FormData(); fd.append('password', pass); fd.append('csrfmiddlewaretoken', getCsrf());
+  const res = await fetch('/auth/admin-login/', {method:'POST', body:fd});
+  const data = await res.json();
+  if (data.success) { showToast('Admin mode enabled!'); setTimeout(()=>location.reload(), 800); }
+  else { showToast(data.message||'Wrong password', 'error'); btn.textContent='Unlock Editing'; }
+}
+
+// ── Footer form ──
+async function submitFooter(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  fd.append('csrfmiddlewaretoken', getCsrf());
+  const res  = await fetch('/api/footer/update/', {method:'POST', body:fd});
+  const data = await res.json();
+  if (data.success) { showToast('Footer updated!'); closeModal('footer-modal'); setTimeout(()=>location.reload(),800); }
+  else showToast(data.message||'Error', 'error');
+}
+
+// ── GSAP scroll animations (page-level) ──
+gsap.utils.toArray('.gsap-reveal').forEach(el => {
+  gsap.fromTo(el, {opacity:0, y:40}, {
+    opacity:1, y:0, duration:.8, ease:'power2.out',
+    scrollTrigger:{trigger:el, start:'top 88%', toggleActions:'play none none none'}
+  });
+});
+</script>
+{% block page_scripts %}{% endblock %}
+</body>
+</html>

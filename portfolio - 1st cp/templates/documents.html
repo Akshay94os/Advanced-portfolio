@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Documents | Akshay Borase{% endblock %}
+
+{% block content %}
+<section class="py-20 relative overflow-hidden">
+  <div class="orb w-80 h-80 bg-primary-600 top-0 -right-20 opacity-15"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 gsap-reveal">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/15 border border-green-500/25 text-green-300 text-xs font-medium mb-4">
+          <i class="fas fa-unlock text-xs"></i> Access Granted
+        </div>
+        <h1 class="section-title text-white mb-2">Documents <span class="grad-text">Repository</span></h1>
+        <p class="text-slate-400">Personal documents, certificates, and records</p>
+      </div>
+      <div class="flex gap-3">
+        {% if is_admin_logged_in %}
+        <button onclick="openModal('doc-upload-modal')"
+          class="btn-primary px-4 py-2.5 rounded-xl text-sm"><i class="fas fa-upload"></i> Upload</button>
+        {% endif %}
+        <a href="/auth/doc-gate-logout/"
+          class="btn-outline px-4 py-2.5 rounded-xl text-sm border-red-500/30 text-red-400 hover:bg-red-500/10">
+          <i class="fas fa-lock"></i> Lock
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 gsap-reveal">
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="text-2xl font-black grad-text">{{ documents|length }}</div>
+        <div class="text-xs text-slate-400 mt-1">Total Files</div>
+      </div>
+      {% for cat in categories %}
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="text-sm font-bold text-primary-300">{{ cat|default:"General" }}</div>
+        <div class="text-xs text-slate-400 mt-1">Category</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Documents Grid -->
+    {% if documents %}
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="docs-grid">
+      {% for doc in documents %}
+      <div class="card p-5 flex flex-col gsap-reveal group" id="doc-card-{{ doc.id }}">
+        <!-- Icon + Extension -->
+        <div class="flex items-start justify-between mb-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-600/20 to-accent-500/10 border border-primary-500/20 flex items-center justify-center text-xl">
+            {% with ext=doc.file_extension %}
+            {% if ext == "pdf" %}🗎
+            {% elif ext in "jpg,jpeg,png,gif,webp" %}🖼️
+            {% elif ext in "doc,docx" %}📝
+            {% elif ext in "zip,rar" %}📦
+            {% else %}📄{% endif %}
+            {% endwith %}
+          </div>
+          <span class="text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full
+            {% if doc.file_extension == 'pdf' %}bg-red-500/15 text-red-400 border border-red-500/20
+            {% elif doc.file_extension in 'jpg,jpeg,png' %}bg-green-500/15 text-green-400 border border-green-500/20
+            {% elif doc.file_extension in 'doc,docx' %}bg-blue-500/15 text-blue-400 border border-blue-500/20
+            {% else %}bg-slate-500/15 text-slate-400 border border-slate-500/20{% endif %}">
+            .{{ doc.file_extension }}
+          </span>
+        </div>
+
+        <h3 class="font-semibold text-white mb-1 text-sm line-clamp-2 flex-1">{{ doc.title }}</h3>
+        {% if doc.description %}<p class="text-xs text-slate-500 mb-2">{{ doc.description }}</p>{% endif %}
+
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-dark-border">
+          <span class="text-xs text-slate-500">{{ doc.file_size_display }}</span>
+          <div class="flex gap-1">
+            <a href="{% url 'download_document' doc.pk %}"
+               class="w-7 h-7 rounded-lg bg-green-500/15 text-green-400 text-xs hover:bg-green-500/30 transition-all flex items-center justify-center" title="Download">
+              <i class="fas fa-download"></i>
+            </a>
+            {% if is_admin_logged_in %}
+            <button onclick="editDoc({{ doc.id }})"
+              class="w-7 h-7 rounded-lg bg-primary-600/20 text-primary-300 text-xs hover:bg-primary-600/40 transition-all opacity-0 group-hover:opacity-100" title="Edit">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteDoc({{ doc.id }})"
+              class="w-7 h-7 rounded-lg bg-red-500/15 text-red-400 text-xs hover:bg-red-500/30 transition-all opacity-0 group-hover:opacity-100" title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Category tag -->
+        {% if doc.category %}
+        <div class="mt-2">
+          <span class="text-xs px-2 py-0.5 rounded-full bg-primary-600/10 text-primary-400 border border-primary-500/15">{{ doc.category }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 text-slate-500 gsap-reveal">
+      <i class="fas fa-folder-open text-6xl mb-4 block opacity-20"></i>
+      <p class="text-lg">No documents uploaded yet.</p>
+      {% if is_admin_logged_in %}
+      <button onclick="openModal('doc-upload-modal')" class="btn-primary px-5 py-2.5 rounded-xl text-sm mt-4">Upload First Document</button>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- ══ DOC UPLOAD MODAL ══ -->
+<div id="doc-upload-modal" class="modal-overlay">
+  <div class="modal-box max-w-lg">
+    <button onclick="closeModal('doc-upload-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <h2 class="text-xl font-bold text-white mb-6">
+      <i class="fas fa-upload text-primary-400 mr-2"></i>
+      <span id="doc-modal-title">Upload Document</span>
+    </h2>
+    <form id="doc-form" onsubmit="submitDoc(event)" class="space-y-4" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" id="doc-edit-id" value=""/>
+      <div><label class="text-xs text-slate-400 mb-1 block">Title *</label>
+        <input type="text" name="title" class="form-input" placeholder="e.g. 10th Marksheet" required/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">File *</label>
+        <input type="file" name="document_file" class="form-input" id="doc-file-input"/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Description</label>
+        <input type="text" name="description" class="form-input" placeholder="Optional description"/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Category</label>
+        <input type="text" name="category" class="form-input" placeholder="e.g. Academic, Certificate, ID Proof"/>
+      </div>
+      <button type="submit" id="doc-save-btn" class="w-full btn-primary py-2.5 rounded-xl font-semibold">Upload Document</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+gsap.utils.toArray('.gsap-reveal').forEach((el,i)=>{
+  gsap.fromTo(el,{y:30,opacity:0},{y:0,opacity:1,duration:.6,delay:i*.06,ease:'power2.out',
+    scrollTrigger:{trigger:el,start:'top 90%'}});
+});
+
+async function submitDoc(e) {
+  e.preventDefault();
+  const btn = document.getElementById('doc-save-btn');
+  const id  = document.getElementById('doc-edit-id').value;
+  const url = id ? `/api/documents/${id}/update/` : '/api/documents/create/';
+  // If editing and no new file, mark field not required
+  const fileInput = document.getElementById('doc-file-input');
+  if (id && !fileInput.files.length) fileInput.removeAttribute('required');
+  setLoading(btn, true);
+  await apiPost(url, new FormData(e.target), () => { setTimeout(()=>location.reload(),800); closeModal('doc-upload-modal'); });
+  setLoading(btn, false);
+}
+
+async function editDoc(id) {
+  const data = await apiGet(`/api/documents/${id}/update/`);
+  if (!data.success) return;
+  document.getElementById('doc-edit-id').value = id;
+  document.getElementById('doc-modal-title').textContent = 'Edit Document';
+  document.getElementById('doc-save-btn').textContent    = 'Update Document';
+  const fi = document.getElementById('doc-file-input');
+  fi.removeAttribute('required');
+  populateForm(document.getElementById('doc-form'), data.data);
+  openModal('doc-upload-modal');
+}
+
+function deleteDoc(id) {
+  confirmDelete('Delete this document permanently?', async () => {
+    await apiPost(`/api/documents/${id}/delete/`, new FormData(), () => {
+      const card = document.getElementById(`doc-card-${id}`);
+      if (card) gsap.to(card, {scale:0,opacity:0,duration:.3,onComplete:()=>card.remove()});
+    });
+  });
+}
+</script>
+{% endblock %}

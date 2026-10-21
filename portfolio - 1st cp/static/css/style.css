@@ -1,0 +1,160 @@
+/* ======================================================
+   Portfolio – Global Styles
+   ====================================================== */
+
+/* Gradient buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #7C3AED, #06B6D4);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity .2s, transform .15s, box-shadow .2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+}
+.btn-primary:hover  { opacity:.9; transform:translateY(-1px); box-shadow:0 8px 25px rgba(124,58,237,.4); }
+.btn-primary:active { transform:translateY(0); }
+
+.btn-outline {
+  background: transparent;
+  color: #7C3AED;
+  border: 1px solid rgba(124,58,237,.5);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  display: inline-flex; align-items:center; justify-content:center; gap:.5rem;
+}
+.btn-outline:hover { background: rgba(124,58,237,.1); border-color:#7C3AED; }
+
+.btn-danger {
+  background: rgba(239,68,68,.15);
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,.3);
+  font-weight:500; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; gap:.4rem;
+  transition: all .2s;
+}
+.btn-danger:hover { background:rgba(239,68,68,.25); }
+
+/* Card */
+.card {
+  background: #1A1A2E;
+  border: 1px solid #2D2D4A;
+  border-radius: 1rem;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(124,58,237,.5);
+  box-shadow: 0 16px 40px rgba(124,58,237,.15);
+}
+
+/* Section title */
+.section-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* Animated background orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: .25;
+  pointer-events: none;
+}
+
+/* Tag chip */
+.tag-chip {
+  display: inline-block;
+  padding: .2rem .7rem;
+  border-radius: 2rem;
+  font-size: .75rem;
+  font-weight: 500;
+  background: rgba(6,182,212,.1);
+  color: #67e8f9;
+  border: 1px solid rgba(6,182,212,.25);
+}
+
+/* Progress bar */
+.progress-bar-outer {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,.07);
+  overflow: hidden;
+}
+.progress-bar-inner {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #7C3AED, #06B6D4);
+  transition: width 1.2s ease-out;
+}
+
+/* Hero text animation */
+@keyframes typewriter { from{width:0} to{width:100%} }
+@keyframes blinkCursor { 0%,100%{border-color:transparent} 50%{border-color:#7C3AED} }
+
+/* Table */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th {
+  text-align:left; padding:.75rem 1rem; font-size:.8rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:.05em; color:#64748B;
+  border-bottom:1px solid #2D2D4A;
+}
+.data-table td {
+  padding:.875rem 1rem; font-size:.9rem; color:#CBD5E1;
+  border-bottom:1px solid #1E2040;
+  vertical-align:middle;
+}
+.data-table tr:hover td { background:rgba(124,58,237,.04); }
+
+/* Responsive */
+@media (max-width:768px) {
+  .modal-box { padding:1.25rem; }
+}
+
+/* Document category badge */
+.doc-cat-badge {
+  font-size:.7rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+  padding:.2rem .6rem; border-radius:999px;
+}
+
+/* Skill proficiency label */
+.proficiency-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:linear-gradient(135deg,#7C3AED,#06B6D4);
+  display:inline-block;
+}
+
+/* Social card */
+.social-card {
+  background: linear-gradient(135deg, rgba(26,26,46,.9), rgba(15,15,26,.9));
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius:1.25rem;
+  padding:1.75rem;
+  transition: all .3s;
+  position:relative; overflow:hidden;
+}
+.social-card::before {
+  content:'';
+  position:absolute; inset:0;
+  background: linear-gradient(135deg, rgba(124,58,237,.1), rgba(6,182,212,.05));
+  opacity:0; transition:opacity .3s;
+}
+.social-card:hover::before { opacity:1; }
+.social-card:hover { transform:translateY(-6px); box-shadow:0 20px 50px rgba(124,58,237,.2); border-color:rgba(124,58,237,.4); }
+
+/* Note row */
+.note-row { transition:background .2s; }
+.note-row:hover { background:rgba(124,58,237,.05); }
+
+/* File type icon colors */
+.ext-pdf  { color:#f87171; }
+.ext-img  { color:#34d399; }
+.ext-doc  { color:#60a5fa; }
+.ext-zip  { color:#fbbf24; }
+.ext-other{ color:#94a3b8; }

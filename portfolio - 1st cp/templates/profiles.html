@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Social Profiles | Akshay Borase{% endblock %}
+
+{% block content %}
+<section class="py-20 relative overflow-hidden">
+  <div class="orb w-96 h-96 bg-accent-500 top-0 -right-24 opacity-15"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="flex items-center justify-between mb-12">
+      <div id="page-header">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-500/15 border border-accent-500/25 text-cyan-300 text-xs font-medium mb-4">
+          <i class="fas fa-share-alt text-xs"></i> Connect
+        </div>
+        <h1 class="section-title text-white mb-3">Social <span class="grad-text">Profiles</span></h1>
+        <p class="text-slate-400">Find me across the web and let's connect!</p>
+      </div>
+      {% if is_admin_logged_in %}
+      <button onclick="openModal('social-add-modal')"
+        class="btn-primary px-5 py-2.5 rounded-xl text-sm"><i class="fas fa-plus"></i> Add Profile</button>
+      {% endif %}
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="socials-grid">
+      {% for sp in social_profiles %}
+      <div class="social-card group gsap-reveal" id="social-card-{{ sp.id }}">
+        <div class="flex items-start justify-between mb-5">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-600/30 to-accent-500/20
+               border border-primary-500/20 flex items-center justify-center text-3xl">
+            {% if sp.icon_name|slice:":3" == "fab" or sp.icon_name|slice:":3" == "fas" %}
+            <i class="{{ sp.icon_name }} text-primary-300 text-2xl"></i>
+            {% else %}{{ sp.icon_name|default:"🌐" }}{% endif %}
+          </div>
+          {% if is_admin_logged_in %}
+          <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onclick="editSocial({{ sp.id }})"
+              class="w-8 h-8 rounded-lg bg-primary-600/20 text-primary-300 text-xs hover:bg-primary-600/40 transition-all">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteSocial({{ sp.id }})"
+              class="w-8 h-8 rounded-lg bg-red-500/15 text-red-400 text-xs hover:bg-red-500/30 transition-all">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          {% endif %}
+        </div>
+        <h3 class="text-xl font-bold text-white mb-1">{{ sp.platform_name }}</h3>
+        {% if sp.username %}<p class="text-sm text-primary-400 mb-2">@{{ sp.username }}</p>{% endif %}
+        {% if sp.description %}<p class="text-sm text-slate-400 mb-4">{{ sp.description }}</p>{% endif %}
+        <a href="{{ sp.profile_url }}" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-2 btn-primary px-4 py-2 rounded-xl text-sm mt-auto">
+          Visit Profile <i class="fas fa-external-link-alt text-xs"></i>
+        </a>
+      </div>
+      {% empty %}
+      <div class="col-span-full text-center py-20 text-slate-500">
+        <i class="fas fa-share-alt text-6xl mb-4 block opacity-20"></i>
+        <p class="text-lg">No social profiles added yet.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_modals %}
+<div id="social-add-modal" class="modal-overlay">
+  <div class="modal-box max-w-md">
+    <button onclick="closeModal('social-add-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <h2 class="text-xl font-bold text-white mb-6"><i class="fas fa-share-alt text-primary-400 mr-2"></i><span id="social-modal-title">Add Social Profile</span></h2>
+    <form id="social-form" onsubmit="submitSocial(event)" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" id="social-edit-id" value=""/>
+      <div><label class="text-xs text-slate-400 mb-1 block">Platform Name *</label>
+        <input type="text" name="platform_name" class="form-input" placeholder="e.g. GitHub" required/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Profile URL *</label>
+        <input type="url" name="profile_url" class="form-input" placeholder="https://..." required/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Icon (FA class or emoji)</label>
+        <input type="text" name="icon_name" class="form-input" placeholder="fab fa-github or 🐙"/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Username</label>
+        <input type="text" name="username" class="form-input" placeholder="@username"/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Description</label>
+        <input type="text" name="description" class="form-input" placeholder="Short description"/>
+      </div>
+      <button type="submit" id="social-save-btn" class="w-full btn-primary py-2.5 rounded-xl font-semibold">Save Profile</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+gsap.fromTo('#page-header',{y:-30,opacity:0},{y:0,opacity:1,duration:.8,ease:'power2.out'});
+gsap.utils.toArray('.gsap-reveal').forEach((el,i)=>{
+  gsap.fromTo(el,{y:40,opacity:0},{y:0,opacity:1,duration:.7,delay:i*.1,ease:'power2.out',
+    scrollTrigger:{trigger:el,start:'top 88%'}});
+});
+
+async function submitSocial(e) {
+  e.preventDefault();
+  const btn = document.getElementById('social-save-btn');
+  const id  = document.getElementById('social-edit-id').value;
+  const url = id ? `/api/socials/${id}/update/` : '/api/socials/create/';
+  setLoading(btn, true);
+  await apiPost(url, new FormData(e.target), () => { setTimeout(()=>location.reload(),800); closeModal('social-add-modal'); });
+  setLoading(btn, false);
+}
+
+async function editSocial(id) {
+  const data = await apiGet(`/api/socials/${id}/update/`);
+  if (!data.success) return;
+  document.getElementById('social-edit-id').value = id;
+  document.getElementById('social-modal-title').textContent = 'Edit Profile';
+  document.getElementById('social-save-btn').textContent    = 'Update Profile';
+  populateForm(document.getElementById('social-form'), data.data);
+  openModal('social-add-modal');
+}
+
+function deleteSocial(id) {
+  confirmDelete('Delete this social profile?', async () => {
+    await apiPost(`/api/socials/${id}/delete/`, new FormData(), () => {
+      const card = document.getElementById(`social-card-${id}`);
+      if (card) gsap.to(card,{scale:0,opacity:0,duration:.3,onComplete:()=>card.remove()});
+    });
+  });
+}
+</script>
+{% endblock %}

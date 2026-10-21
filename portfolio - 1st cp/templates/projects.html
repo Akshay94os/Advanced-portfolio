@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Projects | Akshay Borase{% endblock %}
+{% block meta_desc %}Explore the full portfolio of projects by Akshay Borase – Python, Django, FastAPI, and more.{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="py-20 relative overflow-hidden">
+  <div class="orb w-80 h-80 bg-primary-600 -top-20 -right-20"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="flex items-center justify-between mb-12">
+      <div id="page-header">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-600/15 border border-primary-500/25 text-primary-300 text-xs font-medium mb-4">
+          <i class="fas fa-rocket text-xs"></i> Portfolio
+        </div>
+        <h1 class="section-title text-white mb-3">All <span class="grad-text">Projects</span></h1>
+        <p class="text-slate-400">Everything I've built, shipped, and continue to improve.</p>
+      </div>
+      {% if is_admin_logged_in %}
+      <button onclick="openModal('project-add-modal')"
+        class="btn-primary px-5 py-2.5 rounded-xl text-sm"><i class="fas fa-plus"></i> New Project</button>
+      {% endif %}
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-grid">
+      {% for project in projects %}
+      <div class="card overflow-hidden gsap-reveal group" id="project-card-{{ project.pk }}">
+        <!-- Cover image -->
+        <a href="{% url 'project_detail' project.pk %}">
+          <div class="h-48 overflow-hidden bg-gradient-to-br from-primary-700/40 to-accent-600/20 relative">
+            {% if project.image %}
+            <img src="{{ project.image.url }}" alt="{{ project.title }}"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+            {% else %}
+            <div class="w-full h-full flex items-center justify-center">
+              <i class="fas fa-code text-6xl text-primary-500/30"></i>
+            </div>
+            {% endif %}
+            {% if project.featured %}
+            <div class="absolute top-3 left-3 text-xs font-bold px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">⭐ Featured</div>
+            {% endif %}
+          </div>
+        </a>
+        <div class="p-5">
+          <a href="{% url 'project_detail' project.pk %}">
+            <h3 class="font-bold text-white text-lg mb-2 hover:text-primary-300 transition-colors">{{ project.title }}</h3>
+          </a>
+          <p class="text-sm text-slate-400 mb-3 line-clamp-2">{{ project.short_description|default:project.description }}</p>
+          {% if project.tech_stack %}
+          <div class="flex flex-wrap gap-1 mb-4">
+            {% for tech in project.get_tech_list|slice:":4" %}
+            <span class="tag-chip">{{ tech }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <div class="flex items-center justify-between">
+            <div class="flex gap-2">
+              {% if project.live_url %}
+              <a href="{{ project.live_url }}" target="_blank"
+                 class="text-xs btn-outline px-3 py-1.5 rounded-lg">
+                <i class="fas fa-external-link-alt"></i> Live
+              </a>
+              {% endif %}
+              {% if project.zip_file %}
+              <a href="{% url 'download_project_zip' project.pk %}"
+                 class="text-xs btn-outline px-3 py-1.5 rounded-lg">
+                <i class="fas fa-download"></i> ZIP
+              </a>
+              {% endif %}
+            </div>
+            {% if is_admin_logged_in %}
+            <div class="flex gap-1">
+              <button onclick="editProject({{ project.pk }})"
+                class="w-7 h-7 rounded-lg bg-primary-600/20 text-primary-300 text-xs hover:bg-primary-600/40 transition-all">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button onclick="deleteProject({{ project.pk }})"
+                class="w-7 h-7 rounded-lg bg-red-500/15 text-red-400 text-xs hover:bg-red-500/30 transition-all">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-full text-center py-20 text-slate-500">
+        <i class="fas fa-rocket text-6xl mb-4 block opacity-20"></i>
+        <p class="text-lg">No projects yet.</p>
+        {% if is_admin_logged_in %}<button onclick="openModal('project-add-modal')" class="btn-primary px-5 py-2.5 rounded-xl text-sm mt-4">Add First Project</button>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- ══ PROJECT ADD/EDIT MODAL ══ -->
+<div id="project-add-modal" class="modal-overlay">
+  <div class="modal-box">
+    <button onclick="closeModal('project-add-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <h2 class="text-xl font-bold text-white mb-6"><i class="fas fa-rocket text-primary-400 mr-2"></i><span id="project-modal-title">Add Project</span></h2>
+    <form id="project-form" onsubmit="submitProject(event)" class="space-y-4" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" id="project-edit-id" value=""/>
+      <div><label class="text-xs text-slate-400 mb-1 block">Title *</label>{{ project_form.title }}</div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Short Description</label>{{ project_form.short_description }}</div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Full Description *</label>{{ project_form.description }}</div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div><label class="text-xs text-slate-400 mb-1 block">Live URL</label>{{ project_form.live_url }}</div>
+        <div><label class="text-xs text-slate-400 mb-1 block">Repo URL</label>{{ project_form.repo_url }}</div>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Tech Stack (comma-separated)</label>{{ project_form.tech_stack }}</div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div><label class="text-xs text-slate-400 mb-1 block">Cover Image</label>{{ project_form.image }}</div>
+        <div><label class="text-xs text-slate-400 mb-1 block">ZIP File</label>{{ project_form.zip_file }}</div>
+      </div>
+      <div class="flex items-center gap-2">
+        {{ project_form.featured }}
+        <label class="text-sm text-slate-300">Mark as Featured</label>
+      </div>
+      <button type="submit" id="project-save-btn" class="w-full btn-primary py-2.5 rounded-xl font-semibold">Save Project</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+gsap.fromTo('#page-header', {y:-30,opacity:0},{y:0,opacity:1,duration:.8,ease:'power2.out'});
+gsap.utils.toArray('.gsap-reveal').forEach((el,i) => {
+  gsap.fromTo(el,{y:40,opacity:0},{y:0,opacity:1,duration:.7,delay:i*.08,ease:'power2.out',
+    scrollTrigger:{trigger:el,start:'top 88%'}});
+});
+
+async function submitProject(e) {
+  e.preventDefault();
+  const btn = document.getElementById('project-save-btn');
+  const id  = document.getElementById('project-edit-id').value;
+  const url = id ? `/api/projects/${id}/update/` : '/api/projects/create/';
+  setLoading(btn, true);
+  await apiPost(url, new FormData(e.target), () => { setTimeout(()=>location.reload(),800); closeModal('project-add-modal'); });
+  setLoading(btn, false);
+}
+
+async function editProject(id) {
+  const data = await apiGet(`/api/projects/${id}/update/`);
+  if (!data.success) return;
+  document.getElementById('project-edit-id').value = id;
+  document.getElementById('project-modal-title').textContent = 'Edit Project';
+  document.getElementById('project-save-btn').textContent    = 'Update Project';
+  populateForm(document.getElementById('project-form'), data.data);
+  openModal('project-add-modal');
+}
+
+function deleteProject(id) {
+  confirmDelete('Delete this project?', async () => {
+    await apiPost(`/api/projects/${id}/delete/`, new FormData(), () => {
+      const card = document.getElementById(`project-card-${id}`);
+      if (card) gsap.to(card, {scale:0,opacity:0,duration:.3,onComplete:()=>card.remove()});
+    });
+  });
+}
+</script>
+{% endblock %}

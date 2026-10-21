@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Notes | Akshay Borase{% endblock %}
+
+{% block content %}
+<section class="py-20 relative overflow-hidden">
+  <div class="orb w-72 h-72 bg-primary-600 bottom-10 -left-20 opacity-20"></div>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-10 gsap-reveal">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-600/15 border border-primary-500/25 text-primary-300 text-xs font-medium mb-4">
+          <i class="fas fa-sticky-note text-xs"></i> Notes
+        </div>
+        <h1 class="section-title text-white mb-2">Notes <span class="grad-text">Repository</span></h1>
+        <p class="text-slate-400">Study notes, resources, and references</p>
+      </div>
+      {% if is_admin_logged_in %}
+      <button onclick="openModal('note-add-modal')"
+        class="btn-primary px-5 py-2.5 rounded-xl text-sm"><i class="fas fa-plus"></i> Add Note</button>
+      {% endif %}
+    </div>
+
+    <!-- Notes Table -->
+    <div class="card overflow-hidden gsap-reveal">
+      {% if notes %}
+      <div class="overflow-x-auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th>Tags</th>
+              <th>Live Link</th>
+              <th>File</th>
+              <th>Date</th>
+              {% if is_admin_logged_in %}<th>Actions</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody id="notes-tbody">
+            {% for note in notes %}
+            <tr class="note-row" id="note-row-{{ note.id }}">
+              <td class="text-slate-500 text-sm">{{ forloop.counter }}</td>
+              <td>
+                <div class="font-medium text-white">{{ note.title }}</div>
+                {% if note.description %}<div class="text-xs text-slate-500 mt-0.5">{{ note.description }}</div>{% endif %}
+              </td>
+              <td>
+                {% if note.tags %}
+                <div class="flex flex-wrap gap-1">
+                  {% for tag in note.tags.split %}
+                  <span class="doc-cat-badge bg-primary-600/10 text-primary-400 border border-primary-500/20">{{ tag }}</span>
+                  {% endfor %}
+                </div>
+                {% else %}<span class="text-slate-600">—</span>{% endif %}
+              </td>
+              <td>
+                {% if note.live_url %}
+                <a href="{{ note.live_url }}" target="_blank"
+                   class="inline-flex items-center gap-1 text-accent-500 text-sm hover:text-accent-400 transition-colors">
+                  <i class="fas fa-external-link-alt text-xs"></i> Open
+                </a>
+                {% else %}<span class="text-slate-600">—</span>{% endif %}
+              </td>
+              <td>
+                {% if note.notes_file %}
+                <a href="{% url 'download_note_file' note.pk %}"
+                   class="inline-flex items-center gap-1 text-green-400 text-sm hover:text-green-300 transition-colors">
+                  <i class="fas fa-download text-xs"></i> Download
+                </a>
+                {% else %}<span class="text-slate-600">—</span>{% endif %}
+              </td>
+              <td class="text-slate-500 text-xs">{{ note.created_at|date:"d M Y" }}</td>
+              {% if is_admin_logged_in %}
+              <td>
+                <div class="flex gap-1">
+                  <button onclick="editNote({{ note.id }})"
+                    class="w-7 h-7 rounded-lg bg-primary-600/20 text-primary-300 text-xs hover:bg-primary-600/40 transition-all">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="deleteNote({{ note.id }})"
+                    class="w-7 h-7 rounded-lg bg-red-500/15 text-red-400 text-xs hover:bg-red-500/30 transition-all">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-20 text-slate-500">
+        <i class="fas fa-sticky-note text-6xl mb-4 block opacity-20"></i>
+        <p class="text-lg mb-2">No notes added yet.</p>
+        {% if is_admin_logged_in %}
+        <button onclick="openModal('note-add-modal')" class="btn-primary px-5 py-2.5 rounded-xl text-sm mt-4">Add First Note</button>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Notes Count -->
+    {% if notes %}
+    <p class="text-right text-slate-500 text-sm mt-4">Total: {{ notes|length }} note{{ notes|length|pluralize }}</p>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_modals %}
+<div id="note-add-modal" class="modal-overlay">
+  <div class="modal-box max-w-lg">
+    <button onclick="closeModal('note-add-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <h2 class="text-xl font-bold text-white mb-6">
+      <i class="fas fa-sticky-note text-primary-400 mr-2"></i>
+      <span id="note-modal-title">Add Note</span>
+    </h2>
+    <form id="note-form" onsubmit="submitNote(event)" class="space-y-4" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" id="note-edit-id" value=""/>
+      <div><label class="text-xs text-slate-400 mb-1 block">Title *</label>
+        <input type="text" name="title" class="form-input" placeholder="Note Title" required/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Description</label>
+        <input type="text" name="description" class="form-input" placeholder="Short description"/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Live Link (URL)</label>
+        <input type="url" name="live_url" class="form-input" placeholder="https://..."/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Attach File</label>
+        <input type="file" name="notes_file" class="form-input"/>
+      </div>
+      <div><label class="text-xs text-slate-400 mb-1 block">Tags (space-separated)</label>
+        <input type="text" name="tags" class="form-input" placeholder="Python Tutorial Django"/>
+      </div>
+      <button type="submit" id="note-save-btn" class="w-full btn-primary py-2.5 rounded-xl font-semibold">Save Note</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+gsap.utils.toArray('.gsap-reveal').forEach((el,i)=>{
+  gsap.fromTo(el,{y:30,opacity:0},{y:0,opacity:1,duration:.7,delay:i*.1,ease:'power2.out'});
+});
+
+async function submitNote(e) {
+  e.preventDefault();
+  const btn = document.getElementById('note-save-btn');
+  const id  = document.getElementById('note-edit-id').value;
+  const url = id ? `/api/notes/${id}/update/` : '/api/notes/create/';
+  setLoading(btn, true);
+  await apiPost(url, new FormData(e.target), () => { setTimeout(()=>location.reload(),800); closeModal('note-add-modal'); });
+  setLoading(btn, false);
+}
+
+async function editNote(id) {
+  const data = await apiGet(`/api/notes/${id}/update/`);
+  if (!data.success) return;
+  document.getElementById('note-edit-id').value = id;
+  document.getElementById('note-modal-title').textContent = 'Edit Note';
+  document.getElementById('note-save-btn').textContent    = 'Update Note';
+  populateForm(document.getElementById('note-form'), data.data);
+  openModal('note-add-modal');
+}
+
+function deleteNote(id) {
+  confirmDelete('Delete this note?', async () => {
+    await apiPost(`/api/notes/${id}/delete/`, new FormData(), () => {
+      const row = document.getElementById(`note-row-${id}`);
+      if (row) gsap.to(row, {opacity:0, x:-20, duration:.3, onComplete:()=>row.remove()});
+    });
+  });
+}
+</script>
+{% endblock %}
