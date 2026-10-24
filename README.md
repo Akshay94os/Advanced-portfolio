@@ -26,19 +26,19 @@ A highly functional, robust **Django-based portfolio web application** designed 
 
 ## 📸 Project Interface
 
-Below are snapshots demonstrating the various features, interfaces, and responsive layouts of the project:
+Below are snapshots demonstrating the various features, interfaces, and layouts of the application arranged in a single full-size layout:
 
-### Main Application Views
+![Screenshot 326](./project%20images/Screenshot%20(326).png)
 
-| Dashboard & Overview | Academic & Profile Setup | Skill Matrix & Social Links |
-| :---: | :---: | :---: |
-| ![Dashboard](./project%20images/Screenshot%20(326).png) | ![Profile Details](./project%20images/Screenshot%20(327).png) | ![Skills & Certificates](./project%20images/Screenshot%20(328).png) |
+![Screenshot 327](./project%20images/Screenshot%20(327).png)
 
-### Advanced & High Functionality Features
+![Screenshot 328](./project%20images/Screenshot%20(328).png)
 
-| Document Storage Vault | Project Links Management | Additional Layout Context |
-| :---: | :---: | :---: |
-| ![Password Protected Vault](./project%20images/Screenshot%20(329).png) | ![GitHub & Live Previews](./project%20images/Screenshot%20(330).png) | ![Responsive Interface](./project%20images/Screenshot%20(331).png) |
+![Screenshot 329](./project%20images/Screenshot%20(329).png)
+
+![Screenshot 330](./project%20images/Screenshot%20(330).png)
+
+![Screenshot 331](./project%20images/Screenshot%20(331).png)
 
 ---
 
